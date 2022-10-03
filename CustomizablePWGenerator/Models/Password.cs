@@ -69,6 +69,8 @@ namespace CustomizablePWGenerator.Models
 
             private readonly string specialRegEx = "\\{special\\{?[!@#$%^&*()_+-=`~[\\];:'\\\",<\\.>\\?s]*\\}?:?\\d*\\}";
             private readonly string nameRegEx = "\\{name\\{{1}\\w*(%20|\\s)*\\w*\\}:?(upperFirst|lowerFirst|)?,?(upperSecond|lowerSecond)?\\}";
+            private readonly string numberRegEx = "\\{number\\{?(date|count)?:?([0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{4})?\\}?\\}";
+            private readonly Random random = new Random();
 
             public bool hasSpecial = false;
 
@@ -80,16 +82,24 @@ namespace CustomizablePWGenerator.Models
             public Dictionary<int, Dictionary<int, List<char>>> specials = new Dictionary<int, Dictionary<int, List<char>>>();
 
             /// <summary>
-            /// The names dictionary that governs where where and how names appear.
+            /// The names dictionary that governs where and how names appear.
             /// The dictionary is in this format:
             /// <para>Dictionary: (index in original string, final name string)</para>
             /// </summary>
             public Dictionary<int, string> names = new Dictionary<int, string>();
 
+            /// <summary>
+            /// The numbers dictionary that governs where and how numbers appear.
+            /// The dictionary is in this format:
+            /// <para>Dictionary: (index in original string, final number string)</para>
+            /// </summary>
+            public Dictionary<int, string> numbers = new Dictionary<int, string>();
+
             public PWParser(string template)
             {
                 ParseSpecials(template);
                 ParseName(template);
+                ParseNumbers(template);
             }
 
             void ParseSpecials(string template)
@@ -182,6 +192,69 @@ namespace CustomizablePWGenerator.Models
                                     _ => bldr[lastNameIndex]
                                 };
                             }
+                        }
+
+                        if (!names.ContainsKey(m.Index))
+                            names.Add(m.Index, $"{bldr[0]}{(bldr[lastNameIndex] == -1 ? "" : bldr[lastNameIndex])}");
+                    }
+                }
+            }
+
+            void ParseNumbers(string template)
+            {
+                Regex matcher = new(numberRegEx);
+                MatchCollection mc = matcher.Matches(template);
+                if (mc.Count > 0)
+                {
+                    foreach (Match m in mc)
+                    {
+                        StringBuilder bldr = new StringBuilder();
+                        string numberSubString = template.Substring(m.Index, m.Length);
+                        numberSubString = numberSubString.Replace("{number{", ""); //remove extra information
+                        string arguments = numberSubString[0..numberSubString.IndexOf('}')]; //parse out the arguments
+
+                        int lastColonIndex = arguments.LastIndexOf(':') + 1;
+                        int lastCurlyIndex = arguments.LastIndexOf('}') + 1;
+
+                        if (arguments.Contains(':'))
+                        {
+                            //string modifierString = nameSubString[lastColonIndex..(lastCurlyIndex - 1)];
+                            //string[] modifiers;
+                            //if (modifierString.Contains(','))
+                            //    modifiers = modifierString.Split(',');
+                            //else
+                            //    modifiers = new string[] { modifierString };
+
+                            //foreach (string s in modifiers)
+                            //{
+                            //    bldr[0] = s switch
+                            //    {
+                            //        "upperFirst" => char.Parse(bldr[0].ToString().ToUpper()),
+                            //        "lowerFirst" => char.Parse(bldr[0].ToString().ToLower()),
+                            //        _ => bldr[0]
+                            //    };
+
+                            //    lastNameIndex = bldr.ToString().IndexOf(' ') + 1;
+                            //    bldr[lastNameIndex] = s switch
+                            //    {
+                            //        "upperSecond" => char.Parse(bldr[lastNameIndex].ToString().ToUpper()),
+                            //        "lowerSecond" => char.Parse(bldr[lastNameIndex].ToString().ToLower()),
+                            //        _ => bldr[lastNameIndex]
+                            //    };
+                            //}
+                        }
+                        else
+                        {
+                            Random r = new Random();
+                            bldr = arguments switch
+                            {
+                                "date" => new StringBuilder(DateTime.Now.Year),
+                                "count" => new StringBuilder(_defaultNumberRange.OrderBy(x => r.Next()).Take(_defaultNumberCount).Join("", )),
+                                _ => new StringBuilder()
+                            };
+
+                            //    str.Append(string.Join(", ", Parser.specials.Select(pair => $"{pair.Key} => " +
+                            //    $"{{{pair.Value.Select(innerPair => $"{innerPair.Key} => {innerPair.Value}")}}}")));
                         }
 
                         if (!names.ContainsKey(m.Index))

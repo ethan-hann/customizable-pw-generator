@@ -5,7 +5,7 @@ special - special character: (default selection) -> !@#$%^&*()_+-=`~[]{};:'",<.>
 	/s{list of specials seperated by 's'} -> /s{$s@s!} = !@ -> will randomly choose 2 special characters from the defined list.
 
 number - number formatter:
-	number{date} -> defaults to today's date: /n{2022}
+	number{date} -> defaults to today's year: 2022
 	number{date:yyyy-mm-dd} -> specify the year, month, and day
 	number{date:yyyy} -> specify just the year
 	number{count} -> will choose "count" random numbers from 0-9 to include in the password.
