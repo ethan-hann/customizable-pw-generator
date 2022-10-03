@@ -1,0 +1,18 @@
+Template Text Help
+
+special - special character: (default selection) -> !@#$%^&*()_+-=`~[]{};:'",<.>? -> will randomly choose two specials by default
+	/s{list of specials seperated by 's':numOfspecials} -> /s{!s@s$s%:3} = @$% -> will randomly choose 3 special characters from the defined list.
+	/s{list of specials seperated by 's'} -> /s{$s@s!} = !@ -> will randomly choose 2 special characters from the defined list.
+
+number - number formatter:
+	number{date} -> defaults to today's date: /n{2022}
+	number{date:yyyy-mm-dd} -> specify the year, month, and day
+	number{date:yyyy} -> specify just the year
+	number{count} -> will choose "count" random numbers from 0-9 to include in the password.
+	number{count:range} -> will chose "count" random numbers from "range" to include in the password -> number{3:0-5} = 134
+
+name - name formatter:
+	/name{display name} -> defaults to lowercase first initial followed by lowercase last initial -> /name{John Smith} = js
+	/name{display name: upperFirst,lowerSecond} -> /name{John Smith} = Js
+	/name{display name: lowerFirst, upperSecond} -> /name{John Smith} = jS
+	...
