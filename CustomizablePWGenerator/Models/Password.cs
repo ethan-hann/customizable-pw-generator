@@ -20,7 +20,7 @@
         /// <returns>An instance of the generated password.</returns>
         public Password GeneratePassword()
         {
-            GeneratedPassword = "Test";
+            GeneratedPassword = TemplateText;
             return this;
         }
     }
