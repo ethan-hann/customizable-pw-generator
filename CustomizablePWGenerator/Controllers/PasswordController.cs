@@ -12,9 +12,9 @@ namespace CustomizablePWGenerator.Controllers
 
         [Route("getPassword")]
         [HttpGet]
-        public Password GetPassword(string templateText)
+        public Password GetPassword(string template)
         {
-            generator.TemplateText = templateText;
+            generator.TemplateText = template;
             return generator.GeneratePassword();
         }
     }
