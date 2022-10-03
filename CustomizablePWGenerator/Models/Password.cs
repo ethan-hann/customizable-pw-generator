@@ -67,7 +67,8 @@ namespace CustomizablePWGenerator.Models
             public readonly int _defaultNumberCount = 2;
             public readonly List<int> _defaultNumberRange = Enumerable.Range(0, 10).ToList();
 
-            public readonly string specialRegEx = "\\{special\\{?[!@#$%^&*()_+-=`~[\\];:'\\\",<\\.>\\?s]*\\}?:?\\d*\\}";
+            private readonly string specialRegEx = "\\{special\\{?[!@#$%^&*()_+-=`~[\\];:'\\\",<\\.>\\?s]*\\}?:?\\d*\\}";
+            private readonly string nameRegEx = "\\{name\\{{1}\\w*(%20|\\s)*\\w*\\}:?(upperFirst|lowerFirst|)?,?(upperSecond|lowerSecond)?\\}";
 
             public bool hasSpecial = false;
 
@@ -78,47 +79,17 @@ namespace CustomizablePWGenerator.Models
             /// </summary>
             public Dictionary<int, Dictionary<int, List<char>>> specials = new Dictionary<int, Dictionary<int, List<char>>>();
 
+            /// <summary>
+            /// The names dictionary that governs where where and how names appear.
+            /// The dictionary is in this format:
+            /// <para>Dictionary: (index in original string, final name string)</para>
+            /// </summary>
+            public Dictionary<int, string> names = new Dictionary<int, string>();
+
             public PWParser(string template)
             {
                 ParseSpecials(template);
-                
-                ////List<int> openingCurlys = new List<int>();
-                ////List<int> closingCurlys = new List<int>();
-                //int indexOfSpecialKeyword = template.IndexOf("special");
-                //int indexOfNumberKeyword = template.IndexOf("number");
-                //int indexOfNameKeyword = template.IndexOf("name");
-
-                ////for (int i = template.IndexOf('{'); i > -1; i = template.IndexOf('{', i + 1))
-                ////    openingCurlys.Add(i);
-
-                ////for (int i = template.IndexOf('}'); i > -1; i = template.IndexOf('}', i + 1))
-                ////    closingCurlys.Add(i);
-
-                //string specialParams = string.Empty;
-                //string numberParams = string.Empty;
-                //string nameParams = string.Empty;
-
-                //if (indexOfSpecialKeyword != -1)
-                //{
-                //    int paramsStart = indexOfSpecialKeyword;
-                //    int paramsEnd = template.IndexOf('}', paramsStart);
-                //    specialParams = template[paramsStart..paramsEnd];
-                //    if (specialParams.Equals("special"))
-                //    {
-                //        specials = GetSpecials(_defaultSpecials);
-                //    }
-                //    else
-                //    {
-                //        specialParams = specialParams.Replace("special{", "");
-                //        List<string> _ = specialParams.Split('s').ToList();
-                //        StringBuilder str = new StringBuilder();
-                //        _.ForEach(s => str = str.Append(s));
-                //        specials = GetSpecials(str.ToString());
-                //    }
-                //}
-                //else { specials = new List<char>(); }
-
-                //hasSpecial = specials.Count > 0;
+                ParseName(template);
             }
 
             void ParseSpecials(string template)
@@ -140,7 +111,6 @@ namespace CustomizablePWGenerator.Models
                                     {_defaultNumberCount, GetSpecials(_defaultSpecials) }
                                 });
                             }
-                            //specials.AddRange(GetSpecials(_defaultSpecials));
                         }
                         else
                         {
@@ -166,6 +136,58 @@ namespace CustomizablePWGenerator.Models
                     }
                 }
                 hasSpecial = specials.Count > 0;
+            }
+
+            void ParseName(string template)
+            {
+                Regex matcher = new(nameRegEx);
+                MatchCollection mc = matcher.Matches(template);
+                if (mc.Count > 0)
+                {
+                    foreach (Match m in mc)
+                    {
+                        StringBuilder bldr = new StringBuilder();
+                        string nameSubString = template.Substring(m.Index, m.Length);
+                        nameSubString = nameSubString.Replace("{name{", ""); //remove extra information
+                        string name = nameSubString[0..nameSubString.IndexOf('}')]; //parse out the name
+                        bldr.Append(name);
+
+                        //Modify name string based on modifiers (if they exist)
+                        int lastColonIndex = nameSubString.LastIndexOf(':') + 1;
+                        int lastCurlyIndex = nameSubString.LastIndexOf('}') + 1;
+                        int lastNameIndex = -1;
+                        if (nameSubString.Contains(':'))
+                        {
+                            string modifierString = nameSubString[lastColonIndex..(lastCurlyIndex-1)];
+                            string[] modifiers;
+                            if (modifierString.Contains(','))
+                                modifiers = modifierString.Split(',');
+                            else
+                                modifiers = new string[] { modifierString };
+
+                            foreach (string s in modifiers)
+                            {
+                                bldr[0] = s switch
+                                {
+                                    "upperFirst" => char.Parse(bldr[0].ToString().ToUpper()),
+                                    "lowerFirst" => char.Parse(bldr[0].ToString().ToLower()),
+                                    _ => bldr[0]
+                                };
+
+                                lastNameIndex = bldr.ToString().IndexOf(' ') + 1;
+                                bldr[lastNameIndex] = s switch
+                                {
+                                    "upperSecond" => char.Parse(bldr[lastNameIndex].ToString().ToUpper()),
+                                    "lowerSecond" => char.Parse(bldr[lastNameIndex].ToString().ToLower()),
+                                    _ => bldr[lastNameIndex]
+                                };
+                            }
+                        }
+
+                        if (!names.ContainsKey(m.Index))
+                            names.Add(m.Index, $"{bldr[0]}{(bldr[lastNameIndex] == -1 ? "" : bldr[lastNameIndex])}");
+                    }
+                }
             }
         }
     }
