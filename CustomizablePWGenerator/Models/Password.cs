@@ -93,7 +93,7 @@ namespace CustomizablePWGenerator.Models
             /// The dictionary is in this format:
             /// <para>Dictionary: (index in original string, final number string)</para>
             /// </summary>
-            public Dictionary<int, string> numbers = new Dictionary<int, string>();
+            public Dictionary<int, List<int>> numbers = new Dictionary<int, List<int>>();
 
             public PWParser(string template)
             {
@@ -218,47 +218,44 @@ namespace CustomizablePWGenerator.Models
 
                         if (arguments.Contains(':'))
                         {
-                            //string modifierString = nameSubString[lastColonIndex..(lastCurlyIndex - 1)];
-                            //string[] modifiers;
-                            //if (modifierString.Contains(','))
-                            //    modifiers = modifierString.Split(',');
-                            //else
-                            //    modifiers = new string[] { modifierString };
-
-                            //foreach (string s in modifiers)
-                            //{
-                            //    bldr[0] = s switch
-                            //    {
-                            //        "upperFirst" => char.Parse(bldr[0].ToString().ToUpper()),
-                            //        "lowerFirst" => char.Parse(bldr[0].ToString().ToLower()),
-                            //        _ => bldr[0]
-                            //    };
-
-                            //    lastNameIndex = bldr.ToString().IndexOf(' ') + 1;
-                            //    bldr[lastNameIndex] = s switch
-                            //    {
-                            //        "upperSecond" => char.Parse(bldr[lastNameIndex].ToString().ToUpper()),
-                            //        "lowerSecond" => char.Parse(bldr[lastNameIndex].ToString().ToLower()),
-                            //        _ => bldr[lastNameIndex]
-                            //    };
-                            //}
+                            switch (arguments)
+                            {
+                                default:
+                                    bldr = new StringBuilder(arguments);
+                                    break;
+                            }
                         }
                         else
                         {
                             Random r = new Random();
-                            bldr = arguments switch
+                            //bldr = arguments;
+                            switch (arguments)
                             {
-                                "date" => new StringBuilder(DateTime.Now.Year),
-                                "count" => new StringBuilder(_defaultNumberRange.OrderBy(x => r.Next()).Take(_defaultNumberCount).Join("", )),
-                                _ => new StringBuilder()
-                            };
+                                case "date":
+                                    {
+                                        bldr = new StringBuilder(DateTime.Now.Year);
+                                        break;
+                                    }
+                                case "count":
+                                    {
+                                        IEnumerable<int> nums = _defaultNumberRange.OrderBy(x => r.Next()).Take(_defaultNumberCount);
+                                        if (!numbers.ContainsKey(m.Index))
+                                            numbers.Add(m.Index, nums.ToList());
+                                        else
+                                            numbers[m.Index] = nums.ToList();
+                                        break;
+                                    }
+                                default:
+                                    bldr = new StringBuilder();
+                                    break;
+                            }
 
                             //    str.Append(string.Join(", ", Parser.specials.Select(pair => $"{pair.Key} => " +
                             //    $"{{{pair.Value.Select(innerPair => $"{innerPair.Key} => {innerPair.Value}")}}}")));
                         }
 
-                        if (!names.ContainsKey(m.Index))
-                            names.Add(m.Index, $"{bldr[0]}{(bldr[lastNameIndex] == -1 ? "" : bldr[lastNameIndex])}");
+                        //if (!names.ContainsKey(m.Index))
+                           // names.Add(m.Index, $"{bldr[0]}{(bldr[lastNameIndex] == -1 ? "" : bldr[lastNameIndex])}");
                     }
                 }
             }
