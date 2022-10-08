@@ -15,7 +15,8 @@ namespace CustomizablePWGenerator.Controllers
         public Password GetPassword(string template)
         {
             generator.TemplateText = template;
-            return generator.GeneratePassword();
+            generator.GeneratePassword();
+            return generator;
         }
     }
 }
