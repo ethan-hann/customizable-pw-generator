@@ -9,7 +9,7 @@ namespace CustomizablePWGenerator.Models
         public const string NAME_REGEX = "{name=\"\\w*\\s*\\w+\";?(lowerFirst|upperFirst)?,(lowerSecond|upperSecond)?}";
         public const string DATE_REGEX = "{date}";
 
-        public readonly string _defaultSpecials = "!@#$%^&*()_+-=`~[];:'\",<.>?";
+        public readonly string _defaultSpecials = "!@#$%^&*()_+-=`~[];:',<.>?";
         public readonly List<int> _defaultNumberRange = Enumerable.Range(0, 10).ToList();
 
         /// <summary>
@@ -45,9 +45,26 @@ namespace CustomizablePWGenerator.Models
             //Get the correct number of special characters to replace.
             List<char> specials = GetSpecials(_defaultSpecials, _regularExpressions[SPECIAL_REGEX].Item2);
 
-            string date = ParseDate(template);
+            string date = ParseDate(template).Replace(",", "");
 
-            ParsedString = nameText + specials + date;
+            string finalPw = stringNoTemplate;
+            finalPw = finalPw.Replace(_regularExpressions[NAME_REGEX].Item1, nameText); //replace name
+            finalPw = finalPw.Replace(_regularExpressions[DATE_REGEX].Item1, date); //replace date
+
+            //add specials
+            while (finalPw.Contains("[s]"))
+            {
+                int index = finalPw.IndexOf("[s]");
+                if (index != -1)
+                {
+                    finalPw = finalPw.Insert(index, $"{specials[random.Next(specials.Count)]}");
+                    finalPw = finalPw.Remove(index + 1, "[s]".Length);
+                }
+                else
+                    continue;
+            }
+
+            ParsedString = finalPw;
         }
 
         /// <summary>
@@ -94,7 +111,6 @@ namespace CustomizablePWGenerator.Models
                         replaceIndices.Add(index);
                 }
             }
-            
         }
 
         string ParseName(string template)
@@ -149,9 +165,11 @@ namespace CustomizablePWGenerator.Models
                             }
                         }
                     }
+
                 }
             }
-            return bldr.ToString();
+            //return firstname character and lastname character or just the firstname character if no last name
+            return $"{bldr[0]}{bldr[bldr.ToString().IndexOf(' ') + 1]}";
         }
 
         string ParseDate(string template)
@@ -162,9 +180,7 @@ namespace CustomizablePWGenerator.Models
             if (mc.Count > 0)
             {
                 foreach (Match m in mc)
-                {
                     bldr = bldr.Append(DateTime.Now.Year).Append(',');
-                }
             }
             return bldr.ToString();
         }
