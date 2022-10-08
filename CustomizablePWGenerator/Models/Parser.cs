@@ -25,6 +25,7 @@ namespace CustomizablePWGenerator.Models
         private static readonly Random random = new Random();
 
         public string ParsedString { get; private set; }
+        public string PW { get; private set; }
 
         public Parser(string template)
         {
@@ -64,7 +65,8 @@ namespace CustomizablePWGenerator.Models
                     continue;
             }
 
-            ParsedString = finalPw;
+            ParsedString = stringNoTemplate;
+            PW = finalPw;
         }
 
         /// <summary>
