@@ -28,7 +28,7 @@ namespace CustomizablePWGenerator.Models
         public void GeneratePassword()
         {
             Parser = new Parser(TemplateText);
-            GeneratedPassword = Parser.ParsedString;
+            GeneratedPassword = Parser.PW;
         }
     }
 }
