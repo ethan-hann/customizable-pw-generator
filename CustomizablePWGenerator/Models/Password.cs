@@ -18,7 +18,7 @@ namespace CustomizablePWGenerator.Models
 
         public string GeneratedPassword { get; set; } = string.Empty;
 
-        public Parser Parser { get; set; }
+        //public Parser Parser { get; set; }
         
         
         /// <summary>
@@ -27,8 +27,8 @@ namespace CustomizablePWGenerator.Models
         /// <returns>An instance of the generated password.</returns>
         public void GeneratePassword()
         {
-            Parser = new Parser(TemplateText);
-            GeneratedPassword = Parser.PW;
+            Parser p = new(TemplateText);
+            GeneratedPassword = p.PW;
         }
     }
 }
